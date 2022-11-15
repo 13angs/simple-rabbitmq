@@ -4,6 +4,8 @@ using Simple.RabbitMQ;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IMessagePublisher, MessagePublisher>();
+builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
+builder.Services.AddHostedService<Subscriber>();
 
 var app = builder.Build();
 
