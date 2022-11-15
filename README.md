@@ -83,13 +83,19 @@ cd Sample/ && \
 docker compose up -d
 ```
 
+- run the project
+
+```bash
+dotnet run
+```
+
 - navigate to http://localhost:5010/<any_message_here>
 
 - check the Console if there any message printed there
 
 ```bash
 info: Simple.RabbitMQ.Subscriber[0]
-      any_message_here
+      <any_message_here>
 ```
 
 ## References

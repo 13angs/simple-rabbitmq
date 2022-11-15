@@ -1,6 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
+    <PackageId>13angs.Simple.RabbitMQ</PackageId>
+    <Version>0.0.1</Version>
+    <Authors>13angs</Authors>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
