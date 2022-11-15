@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  rabbitmq-management:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-management
+    hostname: rabbitmq-management
+    ports:
+      - target: 15672
+        published: 15672
+
+      - target: 5672
+        published: 5672
+    networks:
+      - simple-rabbitmq-network
+      
+networks:
+  simple-rabbitmq-network:
+    name: simple-rabbitmq-network

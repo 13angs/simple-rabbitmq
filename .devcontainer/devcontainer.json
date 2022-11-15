@@ -1,11 +1,15 @@
 {
-	"name": "C# (.NET)",
-	"image": "mcr.microsoft.com/devcontainers/dotnet:0-6.0",
-	"features": {
-		"ghcr.io/devcontainers/features/node:1": {
-			"version": "lts"
-		}
-	}
+	"name": "Simple RabbitMQ",
+	"service": "simple-rabbitmq",
+	"dockerComposeFile": "docker-compose.yml",
+	"workspaceFolder": "/workspaces/simple-rabbitmq",
+	"shutdownAction": "stopCompose"
+	// "image": "mcr.microsoft.com/devcontainers/dotnet:0-6.0",
+	// "features": {
+	// 	"ghcr.io/devcontainers/features/node:1": {
+	// 		"version": "lts"
+	// 	}
+	// }
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [5000, 5001],
