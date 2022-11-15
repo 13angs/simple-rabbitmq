@@ -1,3 +1,5 @@
+using RabbitMQ.Client;
+
 namespace Simple.RabbitMQ
 {
     public class Subscriber : IHostedService
@@ -20,7 +22,8 @@ namespace Simple.RabbitMQ
                     "simple_rabbitmq_exchange",
                     "simple_rabbitmq_queue",
                     "simple.rabbitmq",
-                    null
+                    null,
+                    ExchangeType.Topic
                 );
 
                 subscriber.Subscribe(processMessage);

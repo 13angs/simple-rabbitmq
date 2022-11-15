@@ -23,7 +23,7 @@ namespace Simple.RabbitMQ
 
         public void Subscribe(Func<string, IDictionary<string, object>, bool> callback)
         {
-            channel.ExchangeDeclare(exchange, ExchangeType.Fanout);
+            channel.ExchangeDeclare(exchange, this.exchangeType);
             channel!.QueueDeclare(queue,
                 durable: true,
                 exclusive: false,

@@ -13,7 +13,7 @@ app.MapGet("/{message}", (string message, IMessagePublisher publisher) => {
     publisher.Connect(
         "amqp://guest:guest@rabbitmq-management:5672",
         "simple_rabbitmq_exchange",
-        ExchangeType.Fanout
+        ExchangeType.Topic
     );
 
     publisher.Publish(message, "simple.rabbitmq", null);
