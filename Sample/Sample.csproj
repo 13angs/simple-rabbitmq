@@ -1,7 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <ItemGroup>
-    <ProjectReference Include="..\Simple.RabbitMQ\Simple.RabbitMQ.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="13angs.Simple.RabbitMQ" Version="0.0.1" />
   </ItemGroup>
 
   <PropertyGroup>
