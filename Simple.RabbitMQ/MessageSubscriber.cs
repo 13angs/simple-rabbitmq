@@ -65,11 +65,11 @@ namespace Simple.RabbitMQ
             consumer.Received += async(sender, e) => {
                 var body = e.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
-                bool success = await callback.Invoke(message, e.BasicProperties.Headers);
-                if (success)
-                {
-                    channel.BasicAck(e.DeliveryTag, true);
-                }
+                await callback.Invoke(message, e.BasicProperties.Headers);
+                // if (success)
+                // {
+                //     channel.BasicAck(e.DeliveryTag, true);
+                // }
                 await Task.Yield();
             };
 
