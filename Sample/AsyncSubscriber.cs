@@ -35,6 +35,7 @@ namespace Simple.RabbitMQ
         public async Task<bool> processMessage(string message, IDictionary<string, object> headers)
         {   
             _logger.LogInformation(message);
+            _logger.LogInformation(headers["key"].ToString());
             return true;
         }
 

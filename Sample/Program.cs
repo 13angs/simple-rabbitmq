@@ -29,6 +29,7 @@ app.MapGet("/async/{message}", (string message, IMessagePublisher publisher) => 
     );
 
     Dictionary<string, object> headers = new Dictionary<string, object>();
+    headers.Add("key", 123);
 
     publisher.Publish(message, "async.simple.rabbitmq", headers);
     return $"Async Publisher: {message}";

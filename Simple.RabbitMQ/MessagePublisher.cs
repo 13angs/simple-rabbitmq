@@ -11,6 +11,7 @@ namespace Simple.RabbitMQ
         private IModel? channel;
         private string? exchange;
         private string? exchangeType;
+        public int timeToLive = 30000;
 
         public MessagePublisher(IConfiguration configuration)
         {
@@ -21,9 +22,13 @@ namespace Simple.RabbitMQ
         {
              var ttl = new Dictionary<string, object>
             {
-                {"x-message-ttl", 30000}
+                {"x-message-ttl", timeToLive}
             };
             channel.ExchangeDeclare(exchange, exchangeType, arguments: ttl);
+            var properties = channel!.CreateBasicProperties();
+            properties.Persistent = true;
+            properties.Headers = headers;
+            properties.Expiration = timeToLive.ToString();
 
             // while(true)
             // {
@@ -31,7 +36,7 @@ namespace Simple.RabbitMQ
             //     Thread.Sleep(1000);
             // }
             var body = Encoding.UTF8.GetBytes(message);
-            channel!.BasicPublish(exchange, routeKey, null, body);
+            channel!.BasicPublish(exchange, routeKey, properties, body);
         }
         public void Connect(
                             string hostName,

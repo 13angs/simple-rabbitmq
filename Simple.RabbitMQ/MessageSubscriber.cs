@@ -66,8 +66,6 @@ namespace Simple.RabbitMQ
                 var body = e.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
                 bool success = await callback.Invoke(message, e.BasicProperties.Headers);
-                Console.WriteLine(e.BasicProperties.Headers["key"]);
-
                 if (success)
                 {
                     channel.BasicAck(e.DeliveryTag, true);
