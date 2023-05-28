@@ -4,7 +4,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="13angs.Simple.RabbitMQ" Version="0.0.2" />
+    <PackageReference Include="13angs.Simple.RabbitMQ" Version="0.0.3" />
     <!-- <ProjectReference Include="..\Simple.RabbitMQ\Simple.RabbitMQ.csproj" /> -->
   </ItemGroup>
 

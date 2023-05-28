@@ -48,6 +48,34 @@ namespace Simple.RabbitMQ
 
             channel.BasicConsume(queue, true, consumer);
         }
+        public void SubscribeAsync(Func<string, IDictionary<string, object>, Task<bool>> callback)
+        {
+            channel.ExchangeDeclare(exchange, this.exchangeType);
+            channel!.QueueDeclare(queue,
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null
+            );
+
+            channel.QueueBind(queue, exchange, routeKey);
+            channel.BasicQos(0, 10, false);
+
+            var consumer = new AsyncEventingBasicConsumer(channel);
+            consumer.Received += async(sender, e) => {
+                var body = e.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+                bool success = await callback.Invoke(message, e.BasicProperties.Headers);
+                if (success)
+                {
+                    channel.BasicAck(e.DeliveryTag, true);
+                }
+                await Task.Yield();
+            };
+
+            channel.BasicConsume(queue, true, consumer);
+        }
+
         public void Connect(
                             string hostName,
                             string exchange, 
@@ -58,7 +86,28 @@ namespace Simple.RabbitMQ
                                 )
         {
             var factory = new ConnectionFactory{
-                Uri=new Uri(hostName)
+                Uri=new Uri(hostName),
+            };
+            this.connection = factory.CreateConnection();
+            this.channel = connection.CreateModel();
+            this.exchange = exchange;
+            this.queue = queue;
+            this.routeKey = routeKey;
+            this.headers = headers;
+            this.exchangeType = exchangeType;
+        }
+        public void ConnectAsync(
+                            string hostName,
+                            string exchange, 
+                            string queue, 
+                            string routeKey, 
+                            IDictionary<string, object>? headers, 
+                            string exchangeType = ExchangeType.Fanout
+                                )
+        {
+            var factory = new ConnectionFactory{
+                Uri=new Uri(hostName),
+                DispatchConsumersAsync=true,
             };
             this.connection = factory.CreateConnection();
             this.channel = connection.CreateModel();
