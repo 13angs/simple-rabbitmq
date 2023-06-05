@@ -18,7 +18,6 @@ namespace Simple.RabbitMQ
 
         public bool processMessage(string message, IDictionary<string, object> headers)
         {   
-            _logger.LogInformation("Method: ");
             _logger.LogInformation("Message: " + message);
             return true;
         }

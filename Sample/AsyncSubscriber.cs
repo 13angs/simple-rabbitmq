@@ -19,8 +19,6 @@ namespace Simple.RabbitMQ
         public async Task<bool> processMessage(string message, IDictionary<string, object> headers)
         {   
             await Task.Yield();
-            _logger.LogInformation("Name: ");
-            _logger.LogInformation("Method: ");
             _logger.LogInformation("Message: " + message);
             return true;
         }
