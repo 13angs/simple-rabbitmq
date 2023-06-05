@@ -4,79 +4,87 @@
 
 - install the package
 
+```bash
+dotnet add package 13angs.Simple.RabbitMQ --version 0.1.0
+```
+
 - Register into DI container
 
 ```bash
-builder.Services.AddScoped<IMessagePublisher, MessagePublisher>();
-builder.Services.AddScoped<IMessageSubscriber, MessageSubscriber>();
+// Register RabbitMQ connection
+builder.Services.AddSingleton<IBasicConnection>(new BasicConnection("amqp://guest:guest@rabbitmq-management:5672"));
+
+// Register message subscriber
+builder.Services.AddSingleton<IMessageSubscriber>(x =>
+    new MessageSubscriber(
+        x.GetRequiredService<IBasicConnection>(),
+        "simple_rabbitmq_exchange", // exhange name
+        "simple_rabbitmq_queue", // queue name
+        "simple.rabbitmq", // routing key
+        ExchangeType.Fanout // exchange type
+    ));
+
+// Register message publisher
+builder.Services.AddScoped<IMessagePublisher>(x =>
+    new MessagePublisher(
+        x.GetRequiredService<IBasicConnection>(),
+        "simple_rabbitmq_exchange", // exhange name
+        ExchangeType.Fanout // exchange type
+    ));
 ```
 
-### Publisher
+- to subscribe asynchronously you need set DispatchConsumersAsync=true
 
-- inject the IMessagePublisher using constructor in injection
+```csharp
+// Register RabbitMQ connection
+builder.Services.AddSingleton<IBasicConnection>(new BasicConnection("amqp://guest:guest@rabbitmq-management:5672", true));
+
+...
+```
+
+### Publish the message
+
+- inject the IMessagePublisher using constructor injection
 
 ```csharp
 app.MapGet("/{message}", (string message, IMessagePublisher publisher) => {
-    publisher.Connect(
-        "amqp://guest:guest@rabbitmq-management:5672",
-        "simple_rabbitmq_exchange",
-        ExchangeType.Fanout
-    );
-
     publisher.Publish(message, "simple.rabbitmq", null);
     return $"Publisher: {message}";
 });
 ```
 
-### Subscriber
+### Consume/Subscribe to the message
 
-- create a console app or create a background to consume the message
+- create a console app or create a background service to consume the message
 
 ```csharp
-public class Subscriber : IHostedService
+namespace Simple.RabbitMQ
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<Subscriber> _logger;
-
-    public Subscriber(IServiceProvider serviceProvider, ILogger<Subscriber> logger)
+    public class Subscriber : IHostedService
     {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-    }
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        using(var scope = _serviceProvider.CreateScope())
+        ...
+        public Task StartAsync(CancellationToken cancellationToken)
         {
-            IMessageSubscriber subscriber = scope.ServiceProvider.GetRequiredService<IMessageSubscriber>();
-            subscriber.Connect(
-                "amqp://guest:guest@rabbitmq-management:5672",
-                "simple_rabbitmq_exchange",
-                "simple_rabbitmq_queue",
-                "simple.rabbitmq",
-                null
-            );
-
-            subscriber.Subscribe(processMessage);
+            _subscriber.Subscribe(processMessage);
             return Task.CompletedTask;
         }
-    }
 
-    public bool processMessage(string message, IDictionary<string, object> headers)
-    {   
-        _logger.LogInformation(message);
-        return true;
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
+        public bool processMessage(string message, IDictionary<string, object> headers)
+        {   
+            _logger.LogInformation("Message: " + message);
+            return true;
+        }
+        ...
     }
 }
 ```
+- For more detail refer to [this](https://github.com/13angs/simple-rabbitmq/blob/main/Sample/Subscriber.cs)
+- And [this](https://github.com/13angs/simple-rabbitmq/blob/main/Sample/AsyncSubscriber.cs) for consume the message asynchronously
 
 ## Sample demo:
 
-- cd intro Sample/ and run the RabbitMQ server using docker compose
+- cd intro Sample/ 
+- Run the RabbitMQ server using docker compose
 
 ```bash
 cd Sample/ && \
