@@ -1,5 +1,4 @@
 using System.Text;
-using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -7,121 +6,119 @@ namespace Simple.RabbitMQ
 {
     public class MessageSubscriber : IMessageSubscriber
     {
-        private IConnection? connection;
-        private readonly IConfiguration configuration;
-        private IModel? channel;
-        private string? exchange;
-        private string? queue;
-        private string? routeKey;
-        private IDictionary<string, object>? headers;
-        private string? exchangeType;
+        private readonly IBasicConnection _basicConnection;
+        private readonly string _exchange;
+        private readonly string _queue;
+        private readonly IModel _model;
+        private bool _disposed;
 
-        public MessageSubscriber(IConfiguration configuration)
+        /*
+         * Constructor for the MessageSubscriber class.
+         *
+         * @param basicConnection: The basic RabbitMQ connection used for subscribing to messages.
+         * @param exchange: The name of the exchange to bind the queue to.
+         * @param queue: The name of the queue to subscribe to.
+         * @param routingKey: The routing key for binding the queue to the exchange.
+         * @param exchangeType: The type of the exchange.
+         * @param timeToLive: The time-to-live (TTL) value in milliseconds for the messages in the exchange (optional, default is 30000 milliseconds).
+         * @param prefetchSize: The maximum number of messages that can be prefetched (optional, default is 10).
+         */
+        public MessageSubscriber(
+            IBasicConnection basicConnection,
+            string exchange,
+            string queue,
+            string? routingKey,
+            string exchangeType,
+            int timeToLive = 30000,
+            ushort prefetchSize = 10)
         {
-            this.configuration = configuration;
-        }
-
-        public void Subscribe(Func<string, IDictionary<string, object>, bool> callback)
-        {
-            channel.ExchangeDeclare(exchange, this.exchangeType);
-            channel!.QueueDeclare(queue,
+            _basicConnection = basicConnection;
+            _exchange = exchange;
+            _queue = queue;
+            var connection = _basicConnection.GetConnection();
+            _model = connection.CreateModel();
+            var ttl = new Dictionary<string, object>
+            {
+                {"x-message-ttl", timeToLive }
+            };
+            _model.ExchangeDeclare(_exchange, exchangeType, arguments: ttl);
+            _model.QueueDeclare(_queue,
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
-                arguments: null
-            );
+                arguments: null);
+            _model.QueueBind(_queue, _exchange, routingKey);
+            _model.BasicQos(0, prefetchSize, false);
+        }
 
-            channel.QueueBind(queue, exchange, routeKey);
-            channel.BasicQos(0, 10, false);
-
-            var consumer = new EventingBasicConsumer(channel);
-            consumer.Received += (sender, e) => {
+        /*
+         * Subscribes to messages and executes the provided callback function.
+         *
+         * @param callback: The callback function that handles the received message.
+         */
+        public void Subscribe(Func<string, IDictionary<string, object>, bool> callback)
+        {
+            var consumer = new EventingBasicConsumer(_model);
+            consumer.Received += (sender, e) =>
+            {
                 var body = e.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
                 bool success = callback.Invoke(message, e.BasicProperties.Headers);
-
                 // if (success)
                 // {
-                //     channel.BasicAck(e.DeliveryTag, true);
+                //     _model.BasicAck(e.DeliveryTag, true);
                 // }
             };
 
-            channel.BasicConsume(queue, true, consumer);
+            _model.BasicConsume(_queue, true, consumer);
         }
+
+        /*
+         * Asynchronously subscribes to messages and executes the provided callback function.
+         *
+         * @param callback: The async callback function that handles the received message.
+         */
         public void SubscribeAsync(Func<string, IDictionary<string, object>, Task<bool>> callback)
         {
-            channel.ExchangeDeclare(exchange, this.exchangeType);
-            channel!.QueueDeclare(queue,
-                durable: true,
-                exclusive: false,
-                autoDelete: false,
-                arguments: null
-            );
-
-            channel.QueueBind(queue, exchange, routeKey);
-            channel.BasicQos(0, 10, false);
-
-            var consumer = new AsyncEventingBasicConsumer(channel);
-            consumer.Received += async(sender, e) => {
+            var consumer = new AsyncEventingBasicConsumer(_model);
+            consumer.Received += async (sender, e) =>
+            {
+                await Task.Yield();
                 var body = e.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
-                await callback.Invoke(message, e.BasicProperties.Headers);
+                bool success = await callback.Invoke(message, e.BasicProperties.Headers);
                 // if (success)
                 // {
-                //     channel.BasicAck(e.DeliveryTag, true);
+                //     _model.BasicAck(e.DeliveryTag, true);
                 // }
-                await Task.Yield();
             };
 
-            channel.BasicConsume(queue, true, consumer);
+            _model.BasicConsume(_queue, true, consumer);
         }
 
-        public void Connect(
-                            string hostName,
-                            string exchange, 
-                            string queue, 
-                            string routeKey, 
-                            IDictionary<string, object>? headers, 
-                            string exchangeType = ExchangeType.Fanout
-                                )
+        /*
+         * Disposes of the MessageSubscriber object.
+         */
+        public void Dispose()
         {
-            var factory = new ConnectionFactory{
-                Uri=new Uri(hostName),
-            };
-            this.connection = factory.CreateConnection();
-            this.channel = connection.CreateModel();
-            this.exchange = exchange;
-            this.queue = queue;
-            this.routeKey = routeKey;
-            this.headers = headers;
-            this.exchangeType = exchangeType;
-        }
-        public void ConnectAsync(
-                            string hostName,
-                            string exchange, 
-                            string queue, 
-                            string routeKey, 
-                            IDictionary<string, object>? headers, 
-                            string exchangeType = ExchangeType.Fanout
-                                )
-        {
-            var factory = new ConnectionFactory{
-                Uri=new Uri(hostName),
-                DispatchConsumersAsync=true,
-            };
-            this.connection = factory.CreateConnection();
-            this.channel = connection.CreateModel();
-            this.exchange = exchange;
-            this.queue = queue;
-            this.routeKey = routeKey;
-            this.headers = headers;
-            this.exchangeType = exchangeType;
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
-        public void Disconnect()
+        /*
+         * Disposes of the MessageSubscriber object.
+         *
+         * @param disposing: A flag indicating whether the object is being disposed.
+         */
+        protected virtual void Dispose(bool disposing)
         {
-            this.channel!.Dispose();
-            this.connection!.Dispose();
+            if (_disposed)
+                return;
+
+            if (disposing)
+                _model?.Close();
+
+            _disposed = true;
         }
     }
 }

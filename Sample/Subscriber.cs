@@ -1,39 +1,25 @@
-using RabbitMQ.Client;
-
 namespace Simple.RabbitMQ
 {
     public class Subscriber : IHostedService
     {
-        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<Subscriber> _logger;
+        private readonly IMessageSubscriber _subscriber;
 
-        public Subscriber(IServiceProvider serviceProvider, ILogger<Subscriber> logger)
+        public Subscriber(IMessageSubscriber subscriber, ILogger<Subscriber> logger)
         {
-            _serviceProvider = serviceProvider;
+            _subscriber = subscriber;
             _logger = logger;
         }
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            using(var scope = _serviceProvider.CreateScope())
-            {
-                IMessageSubscriber subscriber = scope.ServiceProvider.GetRequiredService<IMessageSubscriber>();
-                subscriber.Connect(
-                    "amqp://guest:guest@rabbitmq-management:5672",
-                    "simple_rabbitmq_exchange",
-                    "simple_rabbitmq_queue",
-                    "simple.rabbitmq",
-                    null,
-                    ExchangeType.Topic
-                );
-
-                subscriber.Subscribe(processMessage);
-                return Task.CompletedTask;
-            }
+            _subscriber.Subscribe(processMessage);
+            return Task.CompletedTask;
         }
 
         public bool processMessage(string message, IDictionary<string, object> headers)
         {   
-            _logger.LogInformation(message);
+            _logger.LogInformation("Method: ");
+            _logger.LogInformation("Message: " + message);
             return true;
         }
 
