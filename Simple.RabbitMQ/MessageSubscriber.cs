@@ -56,14 +56,15 @@ namespace Simple.RabbitMQ
          *
          * @param callback: The callback function that handles the received message.
          */
-        public void Subscribe(Func<string, IDictionary<string, object>, bool> callback)
+        public void Subscribe(Func<string, IDictionary<string, object>, string, bool> callback)
         {
             var consumer = new EventingBasicConsumer(_model);
             consumer.Received += (sender, e) =>
             {
                 var body = e.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
-                bool success = callback.Invoke(message, e.BasicProperties.Headers);
+                
+                bool success = callback.Invoke(message, e.BasicProperties.Headers, e.RoutingKey);
                 // if (success)
                 // {
                 //     _model.BasicAck(e.DeliveryTag, true);
@@ -78,7 +79,7 @@ namespace Simple.RabbitMQ
          *
          * @param callback: The async callback function that handles the received message.
          */
-        public void SubscribeAsync(Func<string, IDictionary<string, object>, Task<bool>> callback)
+        public void SubscribeAsync(Func<string, IDictionary<string, object>, string, Task<bool>> callback)
         {
             var consumer = new AsyncEventingBasicConsumer(_model);
             consumer.Received += async (sender, e) =>
@@ -86,7 +87,7 @@ namespace Simple.RabbitMQ
                 await Task.Yield();
                 var body = e.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
-                bool success = await callback.Invoke(message, e.BasicProperties.Headers);
+                bool success = await callback.Invoke(message, e.BasicProperties.Headers, e.RoutingKey);
                 // if (success)
                 // {
                 //     _model.BasicAck(e.DeliveryTag, true);

@@ -5,7 +5,7 @@
 - install the package
 
 ```bash
-dotnet add package 13angs.Simple.RabbitMQ --version 0.1.0
+dotnet add package 13angs.Simple.RabbitMQ --version 0.1.1
 ```
 
 - Register into DI container
@@ -69,9 +69,9 @@ namespace Simple.RabbitMQ
             return Task.CompletedTask;
         }
 
-        public bool processMessage(string message, IDictionary<string, object> headers)
+        public bool processMessage(string message, IDictionary<string, object> headers, string routingKey)
         {   
-            _logger.LogInformation("Message: " + message);
+            _logger.LogInformation("Routing key: " + routingKey);
             return true;
         }
         ...
@@ -99,9 +99,13 @@ dotnet run
 
 - navigate to http://localhost:5010/<any_message_here>
 
-- check the Console if there any message printed there
+- check the Console you will the message similar to this
 
 ```bash
 info: Simple.RabbitMQ.Subscriber[0]
-      <any_message_here>
+      Routing key: put.user.update_name
+      Message: {"name":"don","action":"update_name"}
+      Method: put
+      Context: user
+      Action: update_name
 ```

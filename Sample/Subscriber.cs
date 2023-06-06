@@ -16,9 +16,15 @@ namespace Simple.RabbitMQ
             return Task.CompletedTask;
         }
 
-        public bool processMessage(string message, IDictionary<string, object> headers)
+        public bool processMessage(string message, IDictionary<string, object> headers, string routingKey)
         {   
-            _logger.LogInformation("Message: " + message);
+            string[] props = routingKey.Split(".");
+            _logger.LogInformation("Routing key: " + routingKey + "\n" + 
+                                    "Message: " + message + "\n" + 
+                                    "Method: " + props[0] + "\n" + 
+                                    "Context: " + props[1]  + "\n" + 
+                                    "Action: " + props[2]
+                                    );
             return true;
         }
 

@@ -16,10 +16,16 @@ namespace Simple.RabbitMQ
             return Task.CompletedTask;
         }
 
-        public async Task<bool> processMessage(string message, IDictionary<string, object> headers)
+        public async Task<bool> processMessage(string message, IDictionary<string, object> headers, string routingKey)
         {   
             await Task.Yield();
-            _logger.LogInformation("Message: " + message);
+            string[] props = routingKey.Split(".");
+            _logger.LogInformation("Routing key: " + routingKey + "\n" + 
+                                    "Message: " + message + "\n" + 
+                                    "Method: " + props[0] + "\n" + 
+                                    "Context: " + props[1]  + "\n" + 
+                                    "Action: " + props[2]
+                                    );
             return true;
         }
 
