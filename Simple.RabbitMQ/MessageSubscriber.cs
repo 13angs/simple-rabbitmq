@@ -11,6 +11,7 @@ namespace Simple.RabbitMQ
         private readonly string _queue;
         private readonly IModel _model;
         private bool _disposed;
+        private readonly bool _autoAck;
 
         /*
          * Constructor for the MessageSubscriber class.
@@ -32,11 +33,13 @@ namespace Simple.RabbitMQ
             uint  prefetchSize = 0,
             ushort prefetchCount = 10,
             bool global = false,
+            bool autoAck=true,
             int timeToLive = 30000)
         {
             _basicConnection = basicConnection;
             _exchange = exchange;
             _queue = queue;
+            _autoAck = autoAck;
             var connection = _basicConnection.GetConnection();
             _model = connection.CreateModel();
             _model.BasicQos(prefetchSize, prefetchCount, global);
@@ -65,15 +68,15 @@ namespace Simple.RabbitMQ
             {
                 var body = e.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
-                
                 bool success = callback.Invoke(message, e.BasicProperties.Headers, e.RoutingKey);
-                // if (success)
-                // {
-                //     _model.BasicAck(e.DeliveryTag, true);
-                // }
+                if (!_autoAck && success)
+                {
+                    Console.WriteLine("Message acknowledged!");
+                    _model.BasicAck(e.DeliveryTag, true);
+                }
             };
 
-            _model.BasicConsume(_queue, true, consumer);
+            _model.BasicConsume(_queue, _autoAck, consumer);
         }
 
         /*
@@ -90,13 +93,13 @@ namespace Simple.RabbitMQ
                 var body = e.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
                 bool success = await callback.Invoke(message, e.BasicProperties.Headers, e.RoutingKey);
-                // if (success)
-                // {
-                //     _model.BasicAck(e.DeliveryTag, true);
-                // }
+                if (!_autoAck && success)
+                {
+                    _model.BasicAck(e.DeliveryTag, true);
+                }
             };
 
-            _model.BasicConsume(_queue, true, consumer);
+            _model.BasicConsume(_queue, _autoAck, consumer);
         }
 
         /*

@@ -16,8 +16,8 @@ builder.Services.AddSingleton<IMessageSubscriber>(x =>
         "simple_rabbitmq_queue", // queue name
         "simple.rabbitmq", // routing key
         ExchangeType.Fanout, // exchange type
-        prefetchSize: 0,
-        prefetchCount: 1
+        prefetchCount: 1,
+        autoAck: false
     ));
 
 // Register message publisher
