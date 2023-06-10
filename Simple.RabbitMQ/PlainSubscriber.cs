@@ -4,7 +4,7 @@ using RabbitMQ.Client.Events;
 
 namespace Simple.RabbitMQ
 {
-    public class MessageSubscriber : IMessageSubscriber
+    public class PlainSubscriber
     {
         private readonly IBasicConnection _basicConnection;
         private readonly string _exchange;
@@ -14,7 +14,7 @@ namespace Simple.RabbitMQ
         private readonly bool _autoAck;
 
         /*
-         * Constructor for the MessageSubscriber class.
+         * Constructor for the PlainSubscriber class.
          *
          * @param basicConnection: The basic RabbitMQ connection used for subscribing to messages.
          * @param exchange: The name of the exchange to bind the queue to.
@@ -24,7 +24,7 @@ namespace Simple.RabbitMQ
          * @param timeToLive: The time-to-live (TTL) value in milliseconds for the messages in the exchange (optional, default is 30000 milliseconds).
          * @param prefetchSize: The maximum number of messages that can be prefetched (optional, default is 10).
          */
-        public MessageSubscriber(
+        public PlainSubscriber(
             IBasicConnection basicConnection,
             string exchange,
             string queue,
@@ -103,7 +103,7 @@ namespace Simple.RabbitMQ
         }
 
         /*
-         * Disposes of the MessageSubscriber object.
+         * Disposes of the PlainSubscriber object.
          */
         public void Dispose()
         {
@@ -112,7 +112,7 @@ namespace Simple.RabbitMQ
         }
 
         /*
-         * Disposes of the MessageSubscriber object.
+         * Disposes of the PlainSubscriber object.
          *
          * @param disposing: A flag indicating whether the object is being disposed.
          */

@@ -1,11 +1,13 @@
+using System.Text;
+
 namespace Simple.RabbitMQ
 {
-    public class AsyncSubscriber : IHostedService
+    public class OrderMessageSubscriber : IHostedService
     {
-        private readonly ILogger<AsyncSubscriber> _logger;
-        private readonly IMessageSubscriber _subscriber;
+        private readonly ILogger<OrderMessageSubscriber> _logger;
+        private readonly IOrderSubscriber _subscriber;
 
-        public AsyncSubscriber(ILogger<AsyncSubscriber> logger, IMessageSubscriber subscriber)
+        public OrderMessageSubscriber(ILogger<OrderMessageSubscriber> logger, IOrderSubscriber subscriber)
         {
             _logger = logger;
             _subscriber = subscriber;
@@ -20,12 +22,11 @@ namespace Simple.RabbitMQ
         {   
             await Task.Yield();
             string[] props = routingKey.Split(".");
-            _logger.LogInformation("Routing key: " + routingKey + "\n" + 
-                                    "Message: " + message + "\n" + 
-                                    "Method: " + props[0] + "\n" + 
-                                    "Context: " + props[1]  + "\n" + 
-                                    "Action: " + props[2]
-                                    );
+            
+            byte[] bname = (byte[])headers["name"];
+            string name = Encoding.UTF8.GetString(bname);
+
+            _logger.LogInformation($"Routing key: {routingKey}\nHeader name: {name}\nHeader count: {headers["count"]}");
             return true;
         }
 

@@ -81,6 +81,56 @@ namespace Simple.RabbitMQ
 - For more detail refer to [this](https://github.com/13angs/simple-rabbitmq/blob/main/Sample/Subscriber.cs)
 - And [this](https://github.com/13angs/simple-rabbitmq/blob/main/Sample/AsyncSubscriber.cs) for consume the message asynchronously
 
+### Adding second Publisher/consumer
+
+- Create a new Interface subscriber Inherit from IMessageSubscriber
+
+```csharp
+namespace Simple.RabbitMQ
+{
+    public interface IOrderSubscriber : IMessageSubscriber{}
+}
+```
+
+- Implement the interface by inheriting from PlainSubscriber
+
+```csharp
+namespace Simple.RabbitMQ
+{
+    public class OrderSubscriber : PlainSubscriber, IOrderSubscriber
+    {
+        public OrderSubscriber(
+            IBasicConnection basicConnection, string exchange,string queue, string? routingKey, string exchangeType, uint prefetchSize = 0, ushort prefetchCount = 10, bool global = false, bool autoAck = true, int timeToLive = 30000) : base(
+                basicConnection, exchange, queue, routingKey, exchangeType, prefetchSize = 0, prefetchCount = 10, global = false, autoAck = true, timeToLive = 30000){}
+    }
+}
+```
+
+- Create a new Interface Inherit from IMessagePublisher
+
+```csharp
+namespace Simple.RabbitMQ
+{
+    public interface IOrderPublisher : IMessagePublisher{}
+}
+```
+
+- Implement the interface by inheriting from PlainPublisher
+
+```csharp
+namespace Simple.RabbitMQ
+{
+    public class OrderPublisher : PlainPublisher, IOrderPublisher
+    {
+        public OrderPublisher(
+            IBasicConnection basicConnection, string exchange, string exchangeType, int timeToLive = 30000) : base(
+                basicConnection, exchange, exchangeType, timeToLive = 30000){}
+    }
+}
+```
+
+- Register the DI using a new Interface
+
 ## Sample demo:
 
 - cd intro Sample/ 
