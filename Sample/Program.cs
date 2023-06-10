@@ -48,6 +48,7 @@ builder.Services.AddScoped<IOrderPublisher>(x =>
 
 // Register the subscriber as a hosted service
 builder.Services.AddHostedService<SimpleMessageSubscriber>(); // consume/subscribe synchronously
+builder.Services.AddHostedService<OrderMessageSubscriber>(); // consume/subscribe synchronously
 // builder.Services.AddHostedService<AsyncSubscriber>(); // consume/subscribe asynchronously
 
 var app = builder.Build();
@@ -68,7 +69,7 @@ app.MapPut("/simple/{id}", ([FromRoute] long id, [FromBody] object body, IMessag
 
 int orderCounter = 0;
 // Handle GET request with an "async" prefix and a message parameter
-app.MapPut("/order/{id}", ([FromRoute] long id, [FromBody] object body, IMessagePublisher publisher) => {
+app.MapPut("/order/{id}", ([FromRoute] long id, [FromBody] object body, IOrderPublisher publisher) => {
     Dictionary<string, object> headers = new Dictionary<string, object>();
     headers.Add("name", "order pub");
     orderCounter+=1;
