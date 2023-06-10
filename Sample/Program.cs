@@ -19,6 +19,17 @@ builder.Services.AddSingleton<IMessageSubscriber>(x =>
         prefetchCount: 1,
         autoAck: false
     ));
+// Register second message subscriber
+builder.Services.AddSingleton<IOrderSubscriber>(x =>
+    new OrderSubscriber(
+        x.GetRequiredService<IBasicConnection>(),
+        "order_message_exchange", // exhange name
+        "order_message_queue", // queue name
+        "order.message", // routing key
+        ExchangeType.Fanout, // exchange type
+        prefetchCount: 1,
+        autoAck: false
+    ));
 
 // Register message publisher
 builder.Services.AddScoped<IMessagePublisher>(x =>
@@ -27,37 +38,46 @@ builder.Services.AddScoped<IMessagePublisher>(x =>
         "simple_rabbitmq_exchange", // exhange name
         ExchangeType.Fanout // exchange type
     ));
+// Register message publisher
+builder.Services.AddScoped<IOrderPublisher>(x =>
+    new OrderPublisher(
+        x.GetRequiredService<IBasicConnection>(),
+        "order_message_exchange", // exhange name
+        ExchangeType.Fanout // exchange type
+    ));
 
 // Register the subscriber as a hosted service
-builder.Services.AddHostedService<AsyncSubscriber>(); // consume/subscribe synchronously
+builder.Services.AddHostedService<SimpleMessageSubscriber>(); // consume/subscribe synchronously
 // builder.Services.AddHostedService<AsyncSubscriber>(); // consume/subscribe asynchronously
 
 var app = builder.Build();
 
-// Handle GET request with a message parameter
-// app.MapPost("/user", async ([FromBody] object body, IMessagePublisher publisher) => {
-//     await Task.Yield();
-//     Dictionary<string, object> headers = new Dictionary<string, object>();
-//     headers.Add("name", "sync sub");
-
-//     // Publish message to RabbitMQ
-//     string message = JsonSerializer.Serialize(body);
-//     publisher.Publish(message, "post.user._", headers);
-//     return;
-// });
-
-int counter = 0;
+int simpleCounter = 0;
 // Handle GET request with an "async" prefix and a message parameter
-app.MapPut("/user/{id}", ([FromRoute] long id, [FromBody] object body, IMessagePublisher publisher) => {
+app.MapPut("/simple/{id}", ([FromRoute] long id, [FromBody] object body, IMessagePublisher publisher) => {
     Dictionary<string, object> headers = new Dictionary<string, object>();
-    headers.Add("name", "async sub");
-    counter+=1;
-    headers.Add("count", counter);
+    headers.Add("name", "simple pub");
+    simpleCounter+=1;
+    headers.Add("count", simpleCounter);
 
     // Publish message to RabbitMQ
     string strBody = JsonSerializer.Serialize(body);
-    publisher.Publish(strBody, "put.user.update_name", headers);
-    return $"Async Publisher: {id}";
+    publisher.Publish(strBody, "put.simple.update_name", headers);
+    return $"Simple Publisher: {id}";
+});
+
+int orderCounter = 0;
+// Handle GET request with an "async" prefix and a message parameter
+app.MapPut("/order/{id}", ([FromRoute] long id, [FromBody] object body, IMessagePublisher publisher) => {
+    Dictionary<string, object> headers = new Dictionary<string, object>();
+    headers.Add("name", "order pub");
+    orderCounter+=1;
+    headers.Add("count", orderCounter);
+
+    // Publish message to RabbitMQ
+    string strBody = JsonSerializer.Serialize(body);
+    publisher.Publish(strBody, "put.order.update_name", headers);
+    return $"Order Publisher: {id}";
 });
 
 app.Run();

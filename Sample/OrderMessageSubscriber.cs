@@ -2,12 +2,12 @@ using System.Text;
 
 namespace Simple.RabbitMQ
 {
-    public class AsyncSubscriber : IHostedService
+    public class OrderMessageSubscriber : IHostedService
     {
-        private readonly ILogger<AsyncSubscriber> _logger;
-        private readonly IMessageSubscriber _subscriber;
+        private readonly ILogger<OrderMessageSubscriber> _logger;
+        private readonly IOrderSubscriber _subscriber;
 
-        public AsyncSubscriber(ILogger<AsyncSubscriber> logger, IMessageSubscriber subscriber)
+        public OrderMessageSubscriber(ILogger<OrderMessageSubscriber> logger, IOrderSubscriber subscriber)
         {
             _logger = logger;
             _subscriber = subscriber;
