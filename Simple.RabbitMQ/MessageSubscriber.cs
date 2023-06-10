@@ -29,14 +29,17 @@ namespace Simple.RabbitMQ
             string queue,
             string? routingKey,
             string exchangeType,
-            int timeToLive = 30000,
-            ushort prefetchSize = 10)
+            uint  prefetchSize = 0,
+            ushort prefetchCount = 10,
+            bool global = false,
+            int timeToLive = 30000)
         {
             _basicConnection = basicConnection;
             _exchange = exchange;
             _queue = queue;
             var connection = _basicConnection.GetConnection();
             _model = connection.CreateModel();
+            _model.BasicQos(prefetchSize, prefetchCount, global);
             var ttl = new Dictionary<string, object>
             {
                 {"x-message-ttl", timeToLive }
@@ -48,7 +51,6 @@ namespace Simple.RabbitMQ
                 autoDelete: false,
                 arguments: null);
             _model.QueueBind(_queue, _exchange, routingKey);
-            _model.BasicQos(0, prefetchSize, false);
         }
 
         /*

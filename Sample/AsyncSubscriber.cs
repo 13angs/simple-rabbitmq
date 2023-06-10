@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace Simple.RabbitMQ
 {
     public class AsyncSubscriber : IHostedService
@@ -20,12 +22,11 @@ namespace Simple.RabbitMQ
         {   
             await Task.Yield();
             string[] props = routingKey.Split(".");
-            _logger.LogInformation("Routing key: " + routingKey + "\n" + 
-                                    "Message: " + message + "\n" + 
-                                    "Method: " + props[0] + "\n" + 
-                                    "Context: " + props[1]  + "\n" + 
-                                    "Action: " + props[2]
-                                    );
+            
+            byte[] bname = (byte[])headers["name"];
+            string name = Encoding.UTF8.GetString(bname);
+
+            _logger.LogInformation($"Routing key: {routingKey}\nHeader name: {name}\nHeader count: {headers["count"]}");
             return true;
         }
 
