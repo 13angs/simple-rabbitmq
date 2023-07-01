@@ -5,7 +5,7 @@
 - install the package
 
 ```bash
-dotnet add package 13angs.Simple.RabbitMQ --version 0.1.1
+dotnet add package 13angs.Simple.RabbitMQ --version 0.1.3
 ```
 
 - Register into DI container
@@ -48,7 +48,13 @@ builder.Services.AddSingleton<IBasicConnection>(new BasicConnection("amqp://gues
 
 ```csharp
 app.MapGet("/{message}", (string message, IMessagePublisher publisher) => {
-    publisher.Publish(message, "simple.rabbitmq", null);
+
+    try{
+        publisher.Publish(message, "simple.rabbitmq", null);
+    }finally{
+        publisher.Dispose();
+        logger.LogInformation("Publisher disposed!");
+    }
     return $"Publisher: {message}";
 });
 ```
@@ -74,7 +80,13 @@ namespace Simple.RabbitMQ
             _logger.LogInformation("Routing key: " + routingKey);
             return true;
         }
-        ...
+        
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            _subscriber.Dispose();
+            _logger.LogInformation("Subscriber disposed!");
+            return Task.CompletedTask;
+        }
     }
 }
 ```
