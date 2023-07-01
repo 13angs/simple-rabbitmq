@@ -55,7 +55,7 @@ var app = builder.Build();
 
 int simpleCounter = 0;
 // Handle GET request with an "async" prefix and a message parameter
-app.MapPut("/simple/{id}", ([FromRoute] long id, [FromBody] object body, IMessagePublisher publisher) => {
+app.MapPut("/simple/{id}", ([FromRoute] long id, [FromBody] object body, IMessagePublisher publisher, ILogger<Program> logger) => {
     Dictionary<string, object> headers = new Dictionary<string, object>();
     headers.Add("name", "simple pub");
     simpleCounter+=1;
@@ -63,13 +63,19 @@ app.MapPut("/simple/{id}", ([FromRoute] long id, [FromBody] object body, IMessag
 
     // Publish message to RabbitMQ
     string strBody = JsonSerializer.Serialize(body);
-    publisher.Publish(strBody, "put.simple.update_name", headers);
+    try{
+        publisher.Publish(strBody, "put.simple.update_name", headers);
+
+    }finally{
+        publisher.Dispose();
+        logger.LogInformation("Publisher disposed!");
+    }
     return $"Simple Publisher: {id}";
 });
 
 int orderCounter = 0;
 // Handle GET request with an "async" prefix and a message parameter
-app.MapPut("/order/{id}", ([FromRoute] long id, [FromBody] object body, IOrderPublisher publisher) => {
+app.MapPut("/order/{id}", ([FromRoute] long id, [FromBody] object body, IOrderPublisher publisher, ILogger<Program> logger) => {
     Dictionary<string, object> headers = new Dictionary<string, object>();
     headers.Add("name", "order pub");
     orderCounter+=1;
@@ -77,7 +83,12 @@ app.MapPut("/order/{id}", ([FromRoute] long id, [FromBody] object body, IOrderPu
 
     // Publish message to RabbitMQ
     string strBody = JsonSerializer.Serialize(body);
-    publisher.Publish(strBody, "put.order.update_name", headers);
+    try{
+        publisher.Publish(strBody, "put.order.update_name", headers);
+    }finally{
+        publisher.Dispose();
+        logger.LogInformation("Publisher disposed!");
+    }
     return $"Order Publisher: {id}";
 });
 
