@@ -32,6 +32,8 @@ namespace Simple.RabbitMQ
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
+            _subscriber.Dispose();
+            _logger.LogInformation("Subscriber disposed!");
             return Task.CompletedTask;
         }
     }
